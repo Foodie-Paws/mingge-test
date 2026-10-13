@@ -19,11 +19,22 @@ let SB = null; // {url, key} 线上模式时的 Supabase 连接信息
 const ONLINE = !!SB;
 const api = async (path, body) => {
   if (ONLINE) {
-    // 线上：调 Supabase RPC
+    // 线上：调 Supabase RPC（参数名须与 RPC 函数签名一致）
     const fn = path.replace('/api/', '');
+    const params = {};
+    if (body) {
+      if (fn === 'verify') {
+        params.p_code = body.code;
+      } else if (fn === 'save_result') {
+        params.p_code = body.code;
+        params.p_result = body.result;
+      } else {
+        Object.assign(params, body);
+      }
+    }
     const r = await fetch(SB.url + '/rest/v1/rpc/' + fn, {
       method:'POST', headers:{'Content-Type':'application/json','apikey':SB.key,'Authorization':'Bearer '+SB.key},
-      body: JSON.stringify(body || {})
+      body: JSON.stringify(params)
     }).then(r => r.json()).catch(()=>({ok:false, msg:'网络异常，请稍后再试'}));
     return r;
   }
