@@ -1,0 +1,12 @@
+# 密钥与本地数据，绝不入库
+supabase_admin.json
+tokens.db
+*.db
+
+# 本地运行产物
+__pycache__/
+*.pyc
+
+# 系统文件
+Thumbs.db
+.DS_Store

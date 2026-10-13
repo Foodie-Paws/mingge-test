@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>命格测评 · 商家管理后台</title>
+<style>
+:root{--paper:#f6f0e1;--ink:#3a2e25;--red:#b33a2b;--red-dk:#8f2b20;--gold:#b8860b;--jade:#3d7a5f;--card:#fffdf6;--line:#d8cdb4}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Noto Serif SC","Songti SC","SimSun",serif;background:var(--paper);color:var(--ink);min-height:100vh;padding:24px 16px}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:22px;text-align:center;color:var(--red-dk);letter-spacing:4px;margin-bottom:4px}
+.sub{font-size:12px;text-align:center;color:#6b5d4f;margin-bottom:24px;letter-spacing:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 10px rgba(90,70,40,.07)}
+.card h2{font-size:16px;color:var(--red-dk);margin-bottom:14px}
+label{font-size:13px;display:block;margin-bottom:6px;color:var(--ink)}
+input,select{font-family:inherit;font-size:14px;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;width:100%;color:var(--ink)}
+input:focus{outline:none;border-color:var(--red)}
+.btn{display:inline-block;padding:10px 26px;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:1px;background:linear-gradient(135deg,var(--red),var(--red-dk));color:#fff}
+.btn.jade{background:linear-gradient(135deg,var(--jade),#2d5f4a)}
+.btn.ghost{background:transparent;border:1.5px solid var(--red);color:var(--red-dk)}
+.btn:active{transform:scale(.97)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:120px}
+.msg{font-size:13px;margin-top:10px;min-height:18px}
+.msg.err{color:var(--red)}.msg.ok{color:var(--jade)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--gold);font-size:12px;letter-spacing:1px}
+td .code{font-family:Consolas,monospace;font-weight:700;color:var(--red-dk);letter-spacing:1px}
+.usage{display:inline-block;padding:2px 8px;border-radius:10px;font-size:12px;background:#eee7d3;color:var(--ink)}
+.usage.full{background:#f4d3cd;color:var(--red-dk)}
+.rec{color:#8b7d68;font-size:12px;line-height:1.6}
+.ops{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.copy-box{background:#f3ecda;border:1px dashed var(--gold);border-radius:8px;padding:12px;font-family:Consolas,monospace;font-size:13px;line-height:1.8;word-break:break-all;margin-top:10px;display:none;white-space:pre-wrap}
+.copy-box.show{display:block}
+.hidden{display:none}
+#login-box{max-width:400px;margin:80px auto 0}
+.note{font-size:12px;color:#8b7d68;margin-top:6px;line-height:1.7}
+@media(max-width:600px){table{font-size:12px}th,td{padding:8px 4px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 登录 -->
+  <div id="login-box">
+    <div class="card">
+      <h2 style="text-align:center">商家管理后台</h2>
+      <label>管理密码</label>
+      <input type="password" id="pwd" placeholder="请输入管理密码">
+      <button class="btn" id="btn-login" style="width:100%;margin-top:12px">登 录</button>
+      <p class="msg" id="login-msg"></p>
+      <p class="note">默认管理密码 admin888，登录后请及时修改（修改 app.py 中 ADMIN_PASSWORD）</p>
+    </div>
+  </div>
+
+  <!-- 主面板 -->
+  <div id="panel" class="hidden">
+    <h1>命格体质测评 · 商家管理</h1>
+    <div class="sub">密码即商品 · 每码可测 3 次</div>
+
+    <div class="card">
+      <h2>批量生成密码</h2>
+      <div class="row">
+        <div><label>生成数量</label><input type="number" id="gen-count" value="10" min="1" max="200"></div>
+        <div><label>每码次数</label><input type="number" id="gen-total" value="3" min="1" max="99"></div>
+        <div style="flex:2"><label>备注（可选）</label><input type="text" id="gen-note" placeholder="如：10月12日新批次"></div>
+        <div><button class="btn" id="btn-gen">生 成</button></div>
+      </div>
+      <div class="copy-box" id="gen-result"></div>
+      <p class="msg" id="gen-msg"></p>
+      <p class="note">生成的密码可直接发送给买家。买家输入密码即可开始测试，用满 3 次后失效。</p>
+    </div>
+
+    <div class="card">
+      <h2>添加自定义密码</h2>
+      <div class="row">
+        <div style="flex:2"><label>密码</label><input type="text" id="add-code" placeholder="如：2026VIP" maxlength="24"></div>
+        <div><label>次数</label><input type="number" id="add-total" value="3" min="1" max="99"></div>
+        <div><button class="btn jade" id="btn-add">添 加</button></div>
+      </div>
+      <p class="msg" id="add-msg"></p>
+    </div>
+
+    <div class="card">
+      <h2>密码使用情况</h2>
+      <button class="btn ghost" id="btn-refresh" style="margin-bottom:14px">刷新列表</button>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>密码</th><th>使用/总数</th><th>创建时间</th><th>备注</th><th>测试记录</th><th>操作</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="msg" id="list-msg"></p>
+    </div>
+  </div>
+
+</div>
+<script>
+const API = (path, body) => fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body||{})}).then(r=>r.json());
+let PWD = '';
+
+const el = id => document.getElementById(id);
+
+// 登录
+el('btn-login').onclick = async () => {
+  const r = await API('/api/admin/login', {pwd: el('pwd').value});
+  if (r.ok) { PWD = el('pwd').value; el('login-box').classList.add('hidden'); el('panel').classList.remove('hidden'); loadList(); }
+  else { el('login-msg').textContent = r.msg || '密码错误'; el('login-msg').className = 'msg err'; }
+};
+
+// 批量生成
+el('btn-gen').onclick = async () => {
+  const r = await API('/api/admin/create', {pwd:PWD, count:+el('gen-count').value, total:+el('gen-total').value, note:el('gen-note').value});
+  if (r.ok) {
+    const box = el('gen-result');
+    box.textContent = r.codes.join('\n');
+    box.classList.add('show');
+    el('gen-msg').textContent = '已生成 ' + r.codes.length + ' 个密码，可全选复制';
+    el('gen-msg').className = 'msg ok';
+    loadList();
+  } else { el('gen-msg').textContent = r.msg; el('gen-msg').className = 'msg err'; }
+};
+
+// 添加自定义
+el('btn-add').onclick = async () => {
+  const r = await API('/api/admin/add', {pwd:PWD, code:el('add-code').value, total:+el('add-total').value});
+  if (r.ok) { el('add-msg').textContent = '添加成功'; el('add-msg').className='msg ok'; el('add-code').value=''; loadList(); }
+  else { el('add-msg').textContent = r.msg; el('add-msg').className='msg err'; }
+};
+
+// 列表
+async function loadList() {
+  const r = await API('/api/admin/tokens', {pwd:PWD});
+  if (!r.ok) { el('list-msg').textContent = r.msg; return; }
+  const tb = el('tbody');
+  tb.innerHTML = '';
+  r.items.forEach(it => {
+    const tr = document.createElement('tr');
+    const recordsHtml = (it.records||[]).map(rec => `<div class="rec">${rec.time} · ${rec.main||''}${rec.sub?(' × '+rec.sub):''}</div>`).join('') || '<span class="rec">暂无</span>';
+    tr.innerHTML = `<td><span class="code">${it.code}</span></td>
+      <td><span class="usage ${it.used>=it.total?'full':''}">${it.used} / ${it.total}</span></td>
+      <td>${it.created}</td>
+      <td>${it.note||'-'}</td>
+      <td>${recordsHtml}</td>
+      <td><button class="btn ghost" style="padding:5px 12px;font-size:12px" data-code="${it.code}">删除</button></td>`;
+    tr.querySelector('button').onclick = async () => {
+      if (!confirm('确认删除密码 ' + it.code + '？')) return;
+      await API('/api/admin/delete', {pwd:PWD, code:it.code});
+      loadList();
+    };
+    tb.appendChild(tr);
+  });
+}
+
+el('btn-refresh').onclick = loadList;
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>命格体质测评</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23b33a2b'/%3E%3Ctext x='16' y='22' font-size='16' text-anchor='middle' fill='%23f6f0e1' font-family='serif' font-weight='bold'%3E%E5%91%BD%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#f6f0e1; --paper2:#efe6cf; --ink:#3a2e25; --ink2:#6b5d4f;
+  --red:#b33a2b; --red-dk:#8f2b20; --gold:#b8860b; --jade:#3d7a5f; --jade-dk:#2d5f4a;
+  --card:#fffdf6; --line:#d8cdb4;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"Noto Serif SC","Songti SC","SimSun",serif;color:var(--ink);background:var(--paper);
+  background-image:radial-gradient(ellipse at 20% 0%, rgba(184,134,11,.06), transparent 55%),
+                   radial-gradient(ellipse at 85% 100%, rgba(61,122,95,.07), transparent 50%);
+  min-height:100vh}
+/* 宣纸质感噪点 */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.05'/></svg>")}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:18px 16px 110px;min-height:100vh}
+h1{font-size:26px;text-align:center;letter-spacing:6px;color:var(--red-dk);margin:26px 0 4px;font-weight:700}
+.h1-orn{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:22px}
+.h1-orn::before,.h1-orn::after{content:'';width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.h1-orn::after{background:linear-gradient(90deg,var(--gold),transparent)}
+.h1-orn span{font-size:11px;color:var(--gold);letter-spacing:4px}
+.sub{font-size:12px;text-align:center;color:var(--ink2);letter-spacing:2px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px 20px;
+  box-shadow:0 3px 14px rgba(90,70,40,.08);margin-bottom:16px}
+/* 密码页 */
+#pwd-card{margin-top:8px;padding-top:28px}
+#pwd-card h2{font-size:19px;text-align:center;color:var(--red-dk);margin-bottom:8px}
+#pwd-card p{font-size:13px;color:var(--ink2);text-align:center;margin-bottom:20px}
+.pwd-input{width:100%;padding:15px 14px;font-size:16px;border:1.5px solid var(--line);border-radius:10px;
+  background:#fff;font-family:inherit;letter-spacing:2px;text-align:center;color:var(--ink);margin-bottom:18px}
+.pwd-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(179,58,43,.1)}
+.pwd-input::placeholder{color:#c9bda4}
+.btn{display:block;width:100%;padding:15px 0;border:none;border-radius:10px;font-size:16px;font-weight:700;
+  font-family:inherit;cursor:pointer;letter-spacing:4px;margin-top:14px;transition:transform .15s}
+.btn:active{transform:scale(.98)}
+.btn-red{background:linear-gradient(135deg,var(--red),var(--red-dk));color:#fff}
+.btn-jade{background:linear-gradient(135deg,var(--jade),var(--jade-dk));color:#fff}
+.btn-ghost{background:transparent;border:1.5px solid var(--red);color:var(--red-dk)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.msg{text-align:center;font-size:13px;margin-top:10px;min-height:18px}
+.msg.err{color:var(--red)}.msg.ok{color:var(--jade)}
+/* 答题页 */
+.hidden{display:none!important}
+#quiz{display:flex;flex-direction:column;justify-content:center;min-height:calc(100vh - 130px)}
+#quiz .progress{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+#quiz .progress .bar{flex:1;height:8px;background:var(--paper2);border-radius:4px;overflow:hidden}
+#quiz .progress .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--red));border-radius:4px;transition:width .3s}
+#quiz .progress .num{font-size:13px;color:var(--ink2);white-space:nowrap}
+#quiz h2.q-title{font-size:17px;line-height:1.65;margin-bottom:20px}
+#quiz h2.q-title .tag{display:block;font-size:11px;color:var(--gold);letter-spacing:2px;margin-bottom:6px}
+.opt{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;
+  padding:16px 16px 16px 48px;margin-bottom:12px;font-size:15px;line-height:1.6;font-family:inherit;cursor:pointer;
+  position:relative;color:var(--ink);transition:border-color .15s, background .15s}
+.opt::before{content:'';position:absolute;left:17px;top:50%;transform:translateY(-50%);width:18px;height:18px;
+  border:1.5px solid var(--line);border-radius:50%;transition:border-color .15s}
+.opt.sel{border-color:var(--red);background:#fdf6ee}
+.opt.sel::before{border-color:var(--red);background:var(--red);box-shadow:inset 0 0 0 3.5px #fff}
+.opt:active{background:#faf3e6}
+.q-nav{display:flex;gap:10px;margin-top:8px}
+.q-nav .btn{margin-top:6px;padding:14px 0}
+/* 结果页 */
+#result .head{text-align:center;padding:26px 0 10px}
+#result .head .badge{font-size:12px;color:var(--gold);letter-spacing:3px;margin-bottom:14px}
+#result .head h2{font-size:30px;color:var(--red-dk);letter-spacing:3px;font-weight:700}
+#result .head .sub2{font-size:13px;color:var(--ink2);margin-top:8px}
+.score-ring{position:relative;width:170px;height:170px;margin:26px auto 6px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .txt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.score-ring .txt b{font-size:34px;color:var(--red-dk)}
+.score-ring .txt span{font-size:11px;color:var(--ink2);letter-spacing:2px}
+.radar-wrap{display:flex;justify-content:center;margin:10px 0}
+.radar-wrap svg text{font-size:10px;fill:var(--ink2);font-family:inherit}
+.sec-title{display:flex;align-items:center;gap:10px;margin:26px 0 14px}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:1px;background:var(--line)}
+.sec-title span{font-size:13px;color:var(--gold);letter-spacing:3px}
+.r-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:12px}
+.r-card h3{font-size:15px;color:var(--red-dk);margin-bottom:10px;letter-spacing:1px}
+.r-card p{font-size:14px;line-height:1.9;color:var(--ink)}
+.r-card ul{list-style:none}
+.r-card ul li{font-size:14px;line-height:1.9;padding-left:18px;position:relative}
+.r-card ul li::before{content:'';position:absolute;left:2px;top:11px;width:7px;height:7px;background:var(--gold);transform:rotate(45deg)}
+.quote{background:linear-gradient(135deg,#fbf4e4,#f5ead3);border:1px dashed var(--gold);border-radius:12px;
+  padding:18px;text-align:center;margin:18px 0}
+.quote p{font-size:15px;line-height:2;color:var(--ink);font-weight:600}
+.quote small{display:block;margin-top:8px;font-size:11px;color:var(--ink2);letter-spacing:2px}
+/* 底部操作栏 */
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(246,240,225,.96);backdrop-filter:blur(8px);
+  border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:50;
+  display:flex;gap:10px}
+.action-bar .btn{margin-top:0;padding:12px 0;letter-spacing:1px;font-size:15px;flex:1}
+.action-bar .btn.sm{flex:.8}
+/* 弹窗 */
+.mask{position:fixed;inset:0;background:rgba(30,22,14,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{background:var(--card);border-radius:16px;padding:26px 22px;max-width:360px;width:100%;text-align:center;
+  border:1px solid var(--gold);box-shadow:0 12px 40px rgba(60,40,20,.3)}
+.modal h3{font-size:18px;color:var(--red-dk);margin-bottom:12px;letter-spacing:2px}
+.modal p{font-size:14px;line-height:1.9;color:var(--ink)}
+.modal .gold{color:var(--gold);font-weight:700}
+/* 好评有礼 */
+.review-modal .steps{margin:16px 0;text-align:left}
+.review-modal .steps li{list-style:none;display:flex;gap:10px;font-size:13px;color:var(--ink);margin-bottom:12px;line-height:1.7}
+.review-modal .steps li b{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border-radius:50%;background:var(--red);color:#fff;font-size:12px;flex-shrink:0}
+/* 长图弹层 */
+#save-overlay{position:fixed;inset:0;background:rgba(30,22,14,.85);z-index:200;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:16px}
+#save-overlay.show{display:flex}
+#save-overlay img{max-width:100%;max-height:72vh;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#save-overlay .tip{color:#f6f0e1;font-size:14px;margin:14px 0 4px;letter-spacing:1px;text-align:center;line-height:1.8}
+#save-overlay .btns{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+#save-overlay .btns .btn{width:auto;padding:10px 22px;margin:0;letter-spacing:1px}
+/* 分享结果模式提示条 */
+#shared-head{background:linear-gradient(135deg,var(--red),var(--red-dk));color:#fff;border-radius:14px;
+  padding:14px 18px;font-size:13px;line-height:1.8;margin-bottom:14px;text-align:center}
+#shared-head b{color:#ffd88a}
+.tips{font-size:12.5px;color:var(--ink2);text-align:center;line-height:1.9;margin-top:14px}
+#quiz .tips{margin-top:10px}
+@media (max-width:360px){
+  h1{font-size:22px;letter-spacing:4px}
+  #result .head h2{font-size:24px}
+}
+@media (min-width:760px){
+  .wrap{padding-top:30px}
+  body{background-attachment:fixed}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ 密码页 ============ -->
+  <section id="gate">
+    <h1>命格体质</h1>
+    <div class="h1-orn"><span>八字智慧 · 现代翻译</span></div>
+    <div class="card" id="pwd-card">
+      <h2>请输入密码</h2>
+      <p>凭密码解锁测评 · 每码可测 3 次</p>
+      <input class="pwd-input" id="pwd" maxlength="24" placeholder="请输入商家提供的密码" autocomplete="off">
+      <button class="btn btn-red" id="btn-start">开 始 测 评</button>
+      <div class="msg" id="gate-msg"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14px;color:var(--ink);text-align:center;margin-bottom:12px">你的命格是哪种体质？</h3>
+      <p style="font-size:12.5px;color:var(--ink2);line-height:2.1;text-align:center;margin-bottom:14px">
+        灵感玩家 · 破局猛将 · 格局舵手 · 天才反骨<br>稳健管家 · 社交锦鲤 · 贵人庇护 · 天机独行
+      </p>
+      <p style="font-size:12px;color:var(--gold);text-align:center;letter-spacing:1px">16 道趣味情境题 · 3 分钟读懂自己的底层性格算法</p>
+    </div>
+    <p class="tips">仅作趣味参考，结果仅供自我探索</p>
+  </section>
+
+  <!-- ============ 答题页 ============ -->
+  <section id="quiz" class="hidden">
+    <div class="progress"><div class="bar"><i id="bar" style="width:6%"></i></div><div class="num" id="qnum">1 / 16</div></div>
+    <div class="card">
+      <h2 class="q-title" id="qtitle"></h2>
+      <div id="opts"></div>
+      <div class="q-nav">
+        <button class="btn btn-ghost" id="btn-prev">上一题</button>
+        <button class="btn btn-red" id="btn-next" disabled>下一题</button>
+      </div>
+    </div>
+    <p class="tips">选择后自动可进入下一题 · 可返回上一题修改答案</p>
+  </section>
+
+  <!-- ============ 结果页 ============ -->
+  <section id="result" class="hidden">
+    <div id="shared-head" class="hidden">这是一份来自好友的命格报告：<b id="shared-name"></b>，你也来测测？</div>
+    <div class="head" id="r-head">
+      <div class="badge">— 你的命格体质 —</div>
+      <h2 id="r-name">灵感玩家</h2>
+      <div class="sub2" id="r-sub">松弛感艺术家 · 对应传统「食神格」</div>
+    </div>
+    <div class="score-ring" id="r-ring"></div>
+    <div class="radar-wrap" id="r-radar"></div>
+
+    <div class="sec-title"><span>核 心 特 质</span></div>
+    <div class="r-card"><ul id="r-traits"></ul></div>
+
+    <div class="sec-title"><span>生 活 放 大 镜</span></div>
+    <div class="r-card"><ul id="r-life"></ul></div>
+
+    <div class="sec-title"><span>命 理 小 课 堂</span></div>
+    <div class="r-card"><p id="r-lesson"></p></div>
+
+    <div id="r-sub-block">
+      <div class="sec-title"><span>你 的 副 命 格</span></div>
+      <div class="r-card" id="r-sub-card"></div>
+    </div>
+
+    <div class="sec-title"><span>成 长 锦 囊</span></div>
+    <div class="r-card"><ul id="r-tips"></ul></div>
+
+    <div class="quote" id="r-quote"></div>
+
+    <p class="tips" id="r-disclaimer">本测试基于传统命理文化趣味设计 · 结果仅作自我探索参考<br>不构成任何专业建议</p>
+  </section>
+
+</div>
+
+<!-- ============ 底部固定操作栏 ============ -->
+<div class="action-bar hidden" id="action-bar">
+  <button class="btn btn-ghost sm" id="btn-again">再测一次</button>
+  <button class="btn btn-jade sm" id="btn-save">保存结果</button>
+  <button class="btn btn-red" id="btn-share">复制结果链接</button>
+  <button class="btn btn-ghost sm" id="btn-review">好评有礼</button>
+</div>
+
+<!-- 好评有礼弹窗 -->
+<div class="mask hidden" id="review-mask">
+  <div class="modal review-modal">
+    <h3>好 评 有 礼</h3>
+    <p style="margin-bottom:4px">感谢您的支持！留下一句好评，</p>
+    <p class="gold">好评后联系客服并发送好评截图，即可获得 1 元返现</p>
+    <ul class="steps">
+      <li><b>1</b><span>在购买店铺中，对这个测评宝贝完成好评</span></li>
+      <li><b>2</b><span>联系客服，发送<b class="gold">好评截图</b></span></li>
+      <li><b>3</b><span>客服核实后，即可获得 <b class="gold">1 元返现</b></span></li>
+    </ul>
+    <button class="btn btn-red" id="btn-review-ok" style="width:auto;padding:11px 38px;margin:6px auto 0;display:block">我知道了</button>
+  </div>
+</div>
+
+<!-- 保存长图弹层 -->
+<div id="save-overlay">
+  <img id="save-img" alt="命格体质报告长图">
+  <div class="tip" id="save-tip">长按上方图片，保存到相册</div>
+  <div class="btns">
+    <button class="btn btn-jade" id="btn-download">下载到本地</button>
+    <button class="btn btn-ghost" id="btn-close-overlay">关闭</button>
+  </div>
+</div>
+
+<script src="./config.js"></script>
+<script src="./data.js"></script>
+<script src="./html2canvas.min.js"></script>
+<script src="./main.js"></script>
+</body>
+</html>
